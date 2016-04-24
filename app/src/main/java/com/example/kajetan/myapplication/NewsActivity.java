@@ -1,62 +1,161 @@
 package com.example.kajetan.myapplication;
 
+import android.os.AsyncTask;
+import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.util.Log;
 import android.view.View;
+import android.webkit.WebView;
 import android.widget.Button;
-import android.widget.Toast;
+import android.widget.TextView;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.HttpURLConnection;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import android.support.v7.widget.RecyclerView;
 
 public class NewsActivity extends AppCompatActivity {
-    private WebService wb;
+    private static final Boolean DEBUG_TAG = true;
+    private WebService wsNews;
+    private WebView wvNews;
+    private List<News> records;
+    private RecyclerView rv;
+    private ListNewsAdapter rvAdapter;
+
+    TextView tvMy;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
+
         setContentView(R.layout.activity_news);
 
-        configure();
+        onCreateConfigureComponents();
+        onCreateRecyclerVier();
     }
 
-    private void configure()
+    private void onCreateRecyclerVier() {
+        rv = (RecyclerView)(findViewById(R.id.recyclerView));
+
+        rvAdapter = new ListNewsAdapter(NewsActivity.this, records);
+        rv.setAdapter(rvAdapter);
+
+        StaggeredGridLayoutManager gridLayoutManager =
+                new StaggeredGridLayoutManager(1, RecyclerView.VERTICAL);
+        rv.setLayoutManager(gridLayoutManager);
+    }
+
+
+    protected void onResume(){
+        super.onResume();
+
+    }
+
+
+    private void onCreateConfigureComponents()
     {
-        wb = new myWebService("localhost", "3306", "Blog");
+        records = Collections.synchronizedList(new ArrayList<News>());
+        wsNews = new WSNews(records);
         setOnButtonTestListener();
     }
+
 
     private void setOnButtonTestListener() {
         Button btn = (Button)findViewById(R.id.btnTest);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (wb.testConnection())
-                    Toast.makeText(NewsActivity.this, "Istnieje polaczenie", Toast.LENGTH_SHORT).show();
-                else
-                    Toast.makeText(NewsActivity.this, "Brak polaczenia", Toast.LENGTH_SHORT).show();
+                ((WSNews)wsNews).readNews();
             }
         });
     }
 
-
-    private class myWebService extends WebService
-    {
-        public myWebService(String ip, String port, String databaseName) {
-            super(ip, port, databaseName);
+    private class WSNews extends WebService{
+        private List<News> records;
+        public WSNews(List<News> records) {
+            super("http://192.168.56.1/");
+            this.records = records;
         }
 
         @Override
-        public boolean testConnection() {
+        public boolean testConnection() throws IOException {
             return false;
         }
 
-        @Override
-        public News[] readNews() {
-            return new News[0];
+        public void readNews() {
+            new DownloadNews().doInBackground();
         }
 
-        @Override
-        public void sendNews() {
+        protected void sendJSON(String jsonObject) {
 
+        }
+
+        public void start() {
+
+        }
+
+        public void stop() {
+
+        }
+
+        private class DownloadNews extends AsyncTask<Void, Integer, Integer> {
+            @Override
+            protected Integer doInBackground(Void... params) {
+                Log.d("LOG", "Inicjalizacja");
+                String jsonString;
+                URL url = null;
+                HttpURLConnection conn = null;
+                StringBuffer sb = new StringBuffer();
+
+                Log.d("LOG", "Ustanowienie Polaczenia");
+                try {
+                    url = new URL(ip + "?News&mobile=-1");
+                    conn = (HttpURLConnection)url.openConnection();
+
+
+                    Log.d("LOG", "Pobranie strumienia danych");
+                    InputStream in = conn.getInputStream();
+                    InputStreamReader isw = new InputStreamReader(in);
+
+                    Log.d("LOG", "Zapis danych do bufora");
+                    int data = isw.read();
+                    while (data != -1) {
+                        char current = (char) data;
+                        data = isw.read();
+                        sb.append(current);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    if (conn != null)
+                        conn.disconnect();
+                }
+
+                Log.d("LOG", "Dodanie Obiektow json do listy");
+                jsonString = sb.toString();
+
+                records.clear();
+                records.addAll(JSONConverterAPI.decodeJson(jsonString));
+
+                rvAdapter.notifyDataSetChanged();
+
+                return 0;
+            }
         }
     }
+
+
 }
 
 
