@@ -6,7 +6,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.AnimationUtils;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.TextView;
@@ -14,11 +16,14 @@ import android.widget.TextView;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
+
 import android.support.v7.widget.RecyclerView;
 
 public class NewsActivity extends AppCompatActivity {
@@ -52,12 +57,21 @@ public class NewsActivity extends AppCompatActivity {
         StaggeredGridLayoutManager gridLayoutManager =
                 new StaggeredGridLayoutManager(1, RecyclerView.VERTICAL);
         rv.setLayoutManager(gridLayoutManager);
+//
+//        rv.setOnHoverListener(new View.OnHoverListener() {
+//            @Override
+//            public boolean onHover(View v, MotionEvent event) {
+//
+//            }
+//        });
+//                (AnimationUtils.loadAnimation(context, R.anim.showing_news);
     }
 
 
     protected void onResume(){
         super.onResume();
 
+        ((WSNews)wsNews).readNews();
     }
 
 
@@ -65,24 +79,13 @@ public class NewsActivity extends AppCompatActivity {
     {
         records = Collections.synchronizedList(new ArrayList<News>());
         wsNews = new WSNews(records);
-        setOnButtonTestListener();
     }
 
-
-    private void setOnButtonTestListener() {
-        Button btn = (Button)findViewById(R.id.btnTest);
-        btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ((WSNews)wsNews).readNews();
-            }
-        });
-    }
 
     private class WSNews extends WebService{
         private List<News> records;
         public WSNews(List<News> records) {
-            super("http://192.168.56.1/");
+            super("http://192.168.88.129/");
             this.records = records;
         }
 
@@ -119,7 +122,8 @@ public class NewsActivity extends AppCompatActivity {
                 Log.d("LOG", "Ustanowienie Polaczenia");
                 try {
                     url = new URL(ip + "?News&mobile=-1");
-                    conn = (HttpURLConnection)url.openConnection();
+                    //conn.setConnectTimeout(5000);
+                    conn = (HttpURLConnection) url.openConnection();
 
 
                     Log.d("LOG", "Pobranie strumienia danych");
@@ -133,6 +137,12 @@ public class NewsActivity extends AppCompatActivity {
                         data = isw.read();
                         sb.append(current);
                     }
+                } catch (SocketTimeoutException e) {
+                    Log.d("LOG", "Za długi czas połączenia");
+                    records.clear();
+                    records.add(new News("ERROR", "Nie można połączyć się z serwerem", "Lol"));
+                    rvAdapter.notifyDataSetChanged();
+                    return 1;
                 } catch (IOException e) {
                     e.printStackTrace();
                 } catch (Exception e) {
@@ -146,9 +156,11 @@ public class NewsActivity extends AppCompatActivity {
                 jsonString = sb.toString();
 
                 records.clear();
-                records.addAll(JSONConverterAPI.decodeJson(jsonString));
-
-                rvAdapter.notifyDataSetChanged();
+                List<News> list = JSONConverterAPI.decodeJson(jsonString);
+                for (News n: list) {
+                    records.add(n);
+                    rvAdapter.notifyDataSetChanged();
+                }
 
                 return 0;
             }

@@ -1,6 +1,7 @@
 package com.example.kajetan.myapplication;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -8,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AnimationUtils;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +44,7 @@ public class ListNewsAdapter extends RecyclerView.Adapter<ListNewsAdapter.MyVH> 
         else
             holder.tvText.setText(news.text);
 
-        holder.cv.startAnimation(AnimationUtils.loadAnimation(context,R.anim.showing_news));
+        holder.cv.setAnimation(AnimationUtils.loadAnimation(context,R.anim.showing_news));
     }
 
 
@@ -60,6 +62,32 @@ public class ListNewsAdapter extends RecyclerView.Adapter<ListNewsAdapter.MyVH> 
             cv = (CardView) itemView.findViewById(R.id.cvMy);
             tvText = (TextView) itemView.findViewById(R.id.recText);
             tvAuthor = (TextView) itemView.findViewById(R.id.recAuthor);
+
+            onLongClickListener(cv);
+        }
+
+        private void onLongClickListener(View view)
+        {
+            view.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // Intent intent =
+                    Toast.makeText(context, "Open full description", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(context, NewsWithComments.class);
+                    intent = intent.putExtra("text", tvText.getText());
+                    intent = intent.putExtra("author", tvAuthor.getText());
+                    context.startActivity(intent);
+                }
+            });
+            view.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    v.startAnimation(AnimationUtils.loadAnimation(context, R.anim.push_to_front_news));
+                
+
+                    return true;
+                }
+            });
         }
     }
 }
