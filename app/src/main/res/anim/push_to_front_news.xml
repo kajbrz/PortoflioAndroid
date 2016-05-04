@@ -15,5 +15,5 @@
         android:fromDegrees="0"
         android:toDegrees="180"
         android:zAdjustment="top"
-        ></rotate>
+        />
 </set>

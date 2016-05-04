@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,12 +19,14 @@ import java.util.List;
  * Created by Kajetan on 2016-04-24.
  */
 public class ListNewsAdapter extends RecyclerView.Adapter<ListNewsAdapter.MyVH> {
-    List<News> newsList;
-    Context context;
-    public ListNewsAdapter(Context context, List<News> newsList) {
+    private List<News> newsList;
+    private Context context;
+    private FragmentNewsReciver frn;
+    public ListNewsAdapter(Context context, List<News> newsList, FragmentNewsReciver frn) {
         super();
         this.context = context;
         this.newsList = newsList;
+        this.frn = frn;
     }
     @Override
     public MyVH onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -73,17 +76,27 @@ public class ListNewsAdapter extends RecyclerView.Adapter<ListNewsAdapter.MyVH> 
                 public void onClick(View v) {
                     // Intent intent =
                     Toast.makeText(context, "Open full description", Toast.LENGTH_SHORT).show();
-                    Intent intent = new Intent(context, NewsWithComments.class);
-                    intent = intent.putExtra("text", tvText.getText());
-                    intent = intent.putExtra("author", tvAuthor.getText());
-                    context.startActivity(intent);
+                    //Intent intent = new Intent(context, NewsWithComments.class);
+                    //intent = intent.putExtra("text", tvText.getText());
+                    //intent = intent.putExtra("author", tvAuthor.getText());                    //
+                    // context.sta
+                    // rtActivity(intent);
+                    try {
+                        frn.send("NEWS", new News(
+                                        "2016-04-5",
+                                        tvText.getText().toString(),
+                                        tvAuthor.getText().toString())
+                        );
+                    } catch (Exception e) {
+                        Log.d("LOG", e.toString());
+                    }
                 }
             });
             view.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
                     v.startAnimation(AnimationUtils.loadAnimation(context, R.anim.push_to_front_news));
-                
+
 
                     return true;
                 }

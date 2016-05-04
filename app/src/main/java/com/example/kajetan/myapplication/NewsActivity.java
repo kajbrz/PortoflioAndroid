@@ -1,76 +1,80 @@
 package com.example.kajetan.myapplication;
 
+
 import android.os.AsyncTask;
-import android.os.StrictMode;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.util.Log;
-import android.view.MotionEvent;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.view.animation.AnimationUtils;
-import android.webkit.WebView;
-import android.widget.Button;
-import android.widget.TextView;
+import android.view.ViewGroup;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
-import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeoutException;
 
-import android.support.v7.widget.RecyclerView;
-
-public class NewsActivity extends AppCompatActivity {
-    private static final Boolean DEBUG_TAG = true;
+public class NewsActivity extends Fragment {
     private WebService wsNews;
-    private WebView wvNews;
     private List<News> records;
     private RecyclerView rv;
     private ListNewsAdapter rvAdapter;
+    private FragmentNewsReciver fragmentNewsReciver;
 
-    TextView tvMy;
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-        StrictMode.setThreadPolicy(policy);
-
-        setContentView(R.layout.activity_news);
-
-        onCreateConfigureComponents();
-        onCreateRecyclerVier();
+    public NewsActivity() {
     }
 
-    private void onCreateRecyclerVier() {
-        rv = (RecyclerView)(findViewById(R.id.recyclerView));
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-        rvAdapter = new ListNewsAdapter(NewsActivity.this, records);
+        fragmentNewsReciver = (FragmentNewsReciver)getArguments().getSerializable("interface");
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+
+        View view = inflater.inflate(R.layout.activity_news, container, false);
+
+        return view;
+    }
+
+
+    public static final NewsActivity newInstance(FragmentNewsReciver fnr)
+    {
+        NewsActivity f = new NewsActivity();
+        Bundle bdl = new Bundle(1);
+        bdl.putSerializable("interface", fnr);
+        f.setArguments(bdl);
+        return f;
+    }
+
+
+    private void onCreateRecyclerVier() {
+        rv = (RecyclerView)(getActivity().findViewById(R.id.recyclerView));
+
+        rvAdapter = new ListNewsAdapter(getActivity(), records, fragmentNewsReciver);
         rv.setAdapter(rvAdapter);
 
         StaggeredGridLayoutManager gridLayoutManager =
-                new StaggeredGridLayoutManager(1, RecyclerView.VERTICAL);
+            new StaggeredGridLayoutManager(1, RecyclerView.VERTICAL);
         rv.setLayoutManager(gridLayoutManager);
-//
-//        rv.setOnHoverListener(new View.OnHoverListener() {
-//            @Override
-//            public boolean onHover(View v, MotionEvent event) {
-//
-//            }
-//        });
-//                (AnimationUtils.loadAnimation(context, R.anim.showing_news);
     }
 
-
-    protected void onResume(){
+    @Override
+    public void onResume(){
         super.onResume();
 
+        onCreateConfigureComponents();
+        onCreateRecyclerVier();
         ((WSNews)wsNews).readNews();
     }
 

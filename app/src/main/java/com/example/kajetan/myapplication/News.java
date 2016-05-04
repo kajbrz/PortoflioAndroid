@@ -1,9 +1,11 @@
 package com.example.kajetan.myapplication;
 
+import java.io.Serializable;
+
 /**
  * Created by Kajetan on 2016-04-21.
  */
-public class News {
+public class News implements Serializable {
     public String date;
     public String text;
     public String author;

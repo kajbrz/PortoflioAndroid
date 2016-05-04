@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <android.support.v7.widget.Toolbar
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/myToolbar"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="50dp"
+        android:elevation="@dimen/cardview_default_elevation"
+        android:background="@color/cardview_light_background"
+        >
+        <android.widget.ImageView
+            android:id="@+id/btnRefresh"
+            android:background="@color/cardview_dark_background"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:text="Departure"
+            android:layout_gravity="right"
+            android:src="@drawable/res_refresh"
+            android:layoutAnimation="@anim/rotate"
+            />
+    </android.support.v7.widget.Toolbar>
+
+    <FrameLayout
+        android:id="@+id/firstFragment"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" />
+
+</LinearLayout>
